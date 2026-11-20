@@ -7,10 +7,12 @@ import type { TrustAnchor } from "@oidfed/authority";
 import type { AppConfig } from "./config.js";
 import { createTrustAnchor, FederationPath } from "./federation.js";
 import type { FederationKey } from "./keys.js";
+import type { Subordinate } from "./subordinates.js";
 
 export interface AppDependencies {
   readonly config: AppConfig;
   readonly key: FederationKey;
+  readonly subordinates: readonly Subordinate[];
 }
 
 export interface AppOptions {
@@ -42,7 +44,11 @@ export async function buildApp(
   app.addContentTypeParser("*", (_request, _payload, done) => {
     done(null);
   });
-  const trustAnchor = createTrustAnchor({ entityId: deps.config.entityId, key: deps.key });
+  const trustAnchor = await createTrustAnchor({
+    entityId: deps.config.entityId,
+    key: deps.key,
+    subordinates: deps.subordinates,
+  });
 
   for (const path of FEDERATION_ROUTES) {
     app.get(path, (request, reply) =>

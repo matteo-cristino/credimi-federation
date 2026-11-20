@@ -1,6 +1,7 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { calculateJwkThumbprint, exportJWK, generateKeyPair, type CryptoKey, type JWK } from "jose";
 import { afterEach } from "vitest";
 import type { AppConfig } from "../src/config.js";
 import { generateFederationKey, type FederationKey } from "../src/keys.js";
@@ -44,4 +45,19 @@ export async function createFixture(overrides: Partial<AppConfig> = {}): Promise
 
 export function nowSeconds(): number {
   return Math.floor(Date.now() / 1000);
+}
+
+export interface SubordinateKey {
+  /** Public JWK with kid, as a subordinate would hand it to the operator. */
+  readonly publicJwk: JWK;
+  /** Held by the test acting as the subordinate, never by the Trust Anchor. */
+  readonly privateKey: CryptoKey;
+}
+
+/** A key pair a subordinate generates for itself. */
+export async function subordinateKey(alg: "ES256" | "PS256" = "ES256"): Promise<SubordinateKey> {
+  const { publicKey, privateKey } = await generateKeyPair(alg, { extractable: true });
+  const jwk = await exportJWK(publicKey);
+  const kid = await calculateJwkThumbprint(jwk, "sha256");
+  return { publicJwk: { ...jwk, kid, alg, use: "sig" }, privateKey };
 }

@@ -28,7 +28,7 @@ Normative requirements implemented:
 | §5.1.1     | `metadata.federation_entity` publishes `federation_fetch_endpoint` and `federation_list_endpoint` (both REQUIRED for Trust Anchors), as `https` URLs without fragments.                                                                                          |
 | §6.1, §6.2 | Configured `metadata_policy` uses only the standard operators (`value`, `add`, `default`, `one_of`, `subset_of`, `superset_of`, `essential`); `constraints` uses `max_path_length`, `naming_constraints`, `allowed_entity_types`. Both are validated at startup. |
 | §8.1       | Fetch endpoint: `GET` with `sub`; `200` + `application/entity-statement+jwt`; unknown `sub` → `404 not_found`; `sub` equal to the issuer → `400 invalid_request`.                                                                                                |
-| §8.2       | List endpoint: `GET`; `200` + `application/json` array of Entity Identifiers; `entity_type` (repeatable) and `intermediate` filters supported; `trust_marked` and `trust_mark_type` → `400 unsupported_parameter`.                                               |
+| §8.2       | List endpoint: `GET`; `200` + `application/json` array of enabled subordinates' Entity Identifiers; `entity_type` and `intermediate` filters supported; `trust_marked` and `trust_mark_type` → `400 unsupported_parameter`. See the list-filter notes below.     |
 | §8.9       | Error responses are `application/json` objects with `error` and `error_description`.                                                                                                                                                                             |
 | §9         | The Entity Configuration is served at the Entity Identifier with `/.well-known/openid-federation` appended (trailing `/` removed), using `GET`.                                                                                                                  |
 | §11.2      | Key rollover procedure is documented (publish new key, keep signing with old key, switch, retire); automation is not implemented.                                                                                                                                |
@@ -40,6 +40,17 @@ endpoints (§8.8), Automatic and Explicit Registration (§12), Intermediate
 Entities and multi-level hierarchies, `signed_jwks_uri`/`jwks_uri`
 publication of federation keys. These endpoints are not advertised and return
 `404 not_found`.
+
+List-filter notes (behaviour of `@oidfed/authority` 2.0.0, verified by tests):
+
+- When `entity_type` is repeated, the result contains subordinates having
+  **any** of the given types. §8.2.1 says the result "MUST be filtered to
+  include all specified Entity Types", which can also be read as requiring
+  every type; clients should send a single `entity_type`.
+- `entity_type` values the library does not know (for example the draft
+  `openid_credential_verifier_provider`) are answered with
+  `400 invalid_request`, even though such types may be registered and are
+  shown on the website.
 
 ### Supporting IETF specifications
 

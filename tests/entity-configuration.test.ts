@@ -9,7 +9,7 @@ const WELL_KNOWN = "/.well-known/openid-federation";
 describe("GET /.well-known/openid-federation", () => {
   it("returns the Entity Configuration with the entity-statement media type", async () => {
     const { config, key } = await createFixture();
-    const app = await buildApp({ config, key });
+    const app = await buildApp({ config, key, subordinates: [] });
     const response = await app.inject({ method: "GET", url: WELL_KNOWN });
 
     expect(response.statusCode).toBe(200);
@@ -19,7 +19,7 @@ describe("GET /.well-known/openid-federation", () => {
 
   it("is an explicitly typed, self-signed statement about the Trust Anchor", async () => {
     const { config, key } = await createFixture();
-    const app = await buildApp({ config, key });
+    const app = await buildApp({ config, key, subordinates: [] });
     const jwt = (await app.inject({ method: "GET", url: WELL_KNOWN })).body;
 
     expect(decodeProtectedHeader(jwt)).toEqual({
@@ -59,7 +59,7 @@ describe("GET /.well-known/openid-federation", () => {
 
   it("never exposes the private key", async () => {
     const { config, key } = await createFixture();
-    const app = await buildApp({ config, key });
+    const app = await buildApp({ config, key, subordinates: [] });
     const privateScalar = key.privateJwk.d ?? "";
     expect(privateScalar).not.toBe("");
 
@@ -77,7 +77,7 @@ describe("GET /.well-known/openid-federation", () => {
 
   it("derives identity from configuration, not from Host or forwarding headers", async () => {
     const { config, key } = await createFixture();
-    const app = await buildApp({ config, key });
+    const app = await buildApp({ config, key, subordinates: [] });
     const response = await app.inject({
       method: "GET",
       url: WELL_KNOWN,
@@ -94,12 +94,12 @@ describe("GET /.well-known/openid-federation", () => {
 
   it("stays verifiable across restarts because the key is reloaded, not regenerated", async () => {
     const { config, key } = await createFixture();
-    const before = await buildApp({ config, key });
+    const before = await buildApp({ config, key, subordinates: [] });
     const firstJwt = (await before.inject({ method: "GET", url: WELL_KNOWN })).body;
     await before.close();
 
     const reloaded = await loadFederationKey(config.signingKeyPath);
-    const after = await buildApp({ config, key: reloaded });
+    const after = await buildApp({ config, key: reloaded, subordinates: [] });
     const secondJwt = (await after.inject({ method: "GET", url: WELL_KNOWN })).body;
 
     expect(decodeProtectedHeader(secondJwt).kid).toBe(decodeProtectedHeader(firstJwt).kid);
@@ -113,7 +113,7 @@ describe("GET /.well-known/openid-federation", () => {
 describe("federation endpoint methods and unknown paths", () => {
   it("answers HEAD like GET without a body", async () => {
     const { config, key } = await createFixture();
-    const app = await buildApp({ config, key });
+    const app = await buildApp({ config, key, subordinates: [] });
     const response = await app.inject({ method: "HEAD", url: WELL_KNOWN });
     expect(response.statusCode).toBe(200);
     expect(response.headers["content-type"]).toBe(ENTITY_STATEMENT_TYPE);
@@ -122,7 +122,7 @@ describe("federation endpoint methods and unknown paths", () => {
 
   it("rejects other methods with a §8.9 error body", async () => {
     const { config, key } = await createFixture();
-    const app = await buildApp({ config, key });
+    const app = await buildApp({ config, key, subordinates: [] });
     const response = await app.inject({ method: "POST", url: WELL_KNOWN, payload: "x=1" });
     expect(response.statusCode).toBe(405);
     expect(response.headers["allow"]).toBe("GET, HEAD");
@@ -137,7 +137,7 @@ describe("federation endpoint methods and unknown paths", () => {
     "returns not_found for %s, which is not advertised",
     async (url) => {
       const { config, key } = await createFixture();
-      const app = await buildApp({ config, key });
+      const app = await buildApp({ config, key, subordinates: [] });
       const response = await app.inject({ method: "GET", url });
       expect(response.statusCode).toBe(404);
       expect(response.headers["content-type"]).toMatch(/^application\/json/);
@@ -149,7 +149,7 @@ describe("federation endpoint methods and unknown paths", () => {
 describe("GET /healthz", () => {
   it("reports ok as uncached JSON", async () => {
     const { config, key } = await createFixture();
-    const app = await buildApp({ config, key });
+    const app = await buildApp({ config, key, subordinates: [] });
     const response = await app.inject({ method: "GET", url: "/healthz" });
     expect(response.statusCode).toBe(200);
     expect(response.headers["content-type"]).toMatch(/^application\/json/);

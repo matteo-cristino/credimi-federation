@@ -15,9 +15,9 @@ with the issuers and verifier of
 It is a **test federation operated by Credimi**. It is not an officially
 recognized EUDI or IT-Wallet Trust Anchor.
 
-> Status: in development. The Trust Anchor identity, persistent signing key
-> and Entity Configuration are implemented; subordinate registration, the web
-> interface and deployment follow in subsequent commits.
+> Status: in development. Identity, persistent signing key, Entity
+> Configuration, declarative subordinate registration and the fetch/list
+> endpoints are implemented; the web interface and deployment follow.
 
 ## Technical specs
 
@@ -40,10 +40,32 @@ export FEDERATION_SIGNING_KEY_PATH=./data/keys/federation.jwk
 export FEDERATION_SUBORDINATES_PATH=./data/subordinates.json
 
 task init           # once: creates the ES256 key (mode 0600), never overwrites
+echo '{"subordinates": []}' > ./data/subordinates.json
 task run            # http://localhost:3000
 ```
 
 Checks: `task lint`, `task test`, `task build`.
+
+## Registering a subordinate
+
+Membership is the JSON file at `FEDERATION_SUBORDINATES_PATH`; there is no
+registration endpoint. Each entry pins the subordinate's **public** federation
+keys, obtained from its operator over a trusted channel — never from its
+reachable Entity Configuration alone. See
+[config/subordinates.example.json](config/subordinates.example.json).
+
+| Member            | Required | Meaning                                                                                 |
+| ----------------- | -------- | --------------------------------------------------------------------------------------- |
+| `entity_id`       | yes      | The subordinate's Entity Identifier (`https`, no query or fragment)                     |
+| `enabled`         | yes      | `false` keeps the entry visible but out of fetch and list                               |
+| `jwks`            | yes      | `{"keys": [...]}` public EC (P-256/384/521) or RSA (≥ 2048-bit) keys, each with a `kid` |
+| `entity_types`    | no       | Entity Type Identifiers, used for listing and display                                   |
+| `metadata_policy` | no       | OpenID Federation 1.0 §6.1 policy, standard operators only                              |
+| `constraints`     | no       | `max_path_length`, `naming_constraints`, `allowed_entity_types` (§6.2)                  |
+
+The file is validated on start and by `node dist/cli.js check`; duplicates,
+private key members, the Trust Anchor's own key, unknown members and invalid
+policies are rejected and the service does not start. Restart after editing.
 
 ## CLI examples
 
@@ -55,10 +77,12 @@ Checks: `task lint`, `task test`, `task build`.
 
 ## API examples
 
-| Endpoint                             | Example                                                       |
-| ------------------------------------ | ------------------------------------------------------------- |
-| `GET /.well-known/openid-federation` | `curl -s http://localhost:3000/.well-known/openid-federation` |
-| `GET /healthz`                       | `curl -s http://localhost:3000/healthz`                       |
+| Endpoint                             | Example                                                                                 |
+| ------------------------------------ | --------------------------------------------------------------------------------------- |
+| `GET /.well-known/openid-federation` | `curl -s http://localhost:3000/.well-known/openid-federation`                           |
+| `GET /federation_fetch?sub=…`        | `curl -s 'http://localhost:3000/federation_fetch?sub=https%3A%2F%2Fissuer.example.org'` |
+| `GET /federation_list`               | `curl -s http://localhost:3000/federation_list`                                         |
+| `GET /healthz`                       | `curl -s http://localhost:3000/healthz`                                                 |
 
 ## Governance
 

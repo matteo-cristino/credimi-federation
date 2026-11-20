@@ -4,6 +4,7 @@
  */
 import { ConfigError, loadConfig, requireEnv } from "./config.js";
 import { generateFederationKey, KeyError, loadFederationKey, publicJwks } from "./keys.js";
+import { loadSubordinates, SubordinateConfigError } from "./subordinates.js";
 
 export interface CliIo {
   readonly stdout: (text: string) => void;
@@ -54,8 +55,14 @@ export async function runCli(
       case "check": {
         const config = loadConfig(env);
         const key = await loadFederationKey(config.signingKeyPath);
+        const subordinates = await loadSubordinates(config.subordinatesPath, {
+          entityId: config.entityId,
+          key,
+        });
+        const enabled = subordinates.filter((entry) => entry.enabled).length;
         io.stderr(
-          `Configuration is valid\n  entity id: ${config.entityId}\n  kid:       ${key.kid}\n`,
+          `Configuration is valid\n  entity id:    ${config.entityId}\n  kid:          ${key.kid}\n` +
+            `  subordinates: ${subordinates.length} registered, ${enabled} enabled\n`,
         );
         return 0;
       }
@@ -74,7 +81,11 @@ export async function runCli(
         return 2;
     }
   } catch (error) {
-    if (error instanceof ConfigError || error instanceof KeyError) {
+    if (
+      error instanceof ConfigError ||
+      error instanceof KeyError ||
+      error instanceof SubordinateConfigError
+    ) {
       io.stderr(`Error: ${error.message}\n`);
       return 1;
     }

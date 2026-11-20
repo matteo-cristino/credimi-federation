@@ -1,0 +1,43 @@
+{
+  "subordinates": [
+    {
+      "entity_id": "https://issuer.example.org",
+      "enabled": true,
+      "entity_types": ["openid_credential_issuer"],
+      "jwks": {
+        "keys": [
+          {
+            "kty": "EC",
+            "crv": "P-256",
+            "x": "ApBzjX978zEWXDgN6mEyGt3iRzXHJ1BD9UbuUEoCA04",
+            "y": "zjtVkcHBN33rY_wiVQD5Sbw_zMd6Nc0lfEIfNLsg5XE",
+            "kid": "3W_mNua06qYQWuHcL_S7CvDmtcVOyGzvUA8AIlADJzU",
+            "alg": "ES256",
+            "use": "sig"
+          }
+        ]
+      },
+      "constraints": {
+        "max_path_length": 0
+      }
+    },
+    {
+      "entity_id": "https://verifier.example.org",
+      "enabled": false,
+      "entity_types": ["openid_credential_verifier"],
+      "jwks": {
+        "keys": [
+          {
+            "kty": "EC",
+            "crv": "P-256",
+            "x": "RPdgqvVMnJfLAcogHC0LzLEW5RkNsH9M8yzAqqCyeus",
+            "y": "gKDyMNo0hfk2Z391-jW3hg6lOt81jGc3Zp5FtAlpSPU",
+            "kid": "WvZ8RtlVIAVFkOZJBn8faycln_PGYNQtNj-lzm21-14",
+            "alg": "ES256",
+            "use": "sig"
+          }
+        ]
+      }
+    }
+  ]
+}
