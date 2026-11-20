@@ -52,7 +52,10 @@ Identifier, Entity Configuration and federation keys.
 - `jose` generates the ES256 key and computes its RFC 7638 thumbprint `kid`.
 - No database: membership is a validated JSON file; identity is one key file.
 - Server-rendered HTML with the Credimi brand assets; no frontend framework.
-- Tests: Vitest, with Fastify `inject` for HTTP behaviour.
+- Tests: Vitest. The end-to-end test builds a Trust Chain from a locally
+  generated subordinate and verifies it with `@openid-federation/core`
+  (OpenWallet Foundation Labs, independent of the signing library), with a
+  direct `jose` implementation of the §10.2 checks, and with `@oidfed/core`.
 
 Versions, dependencies and architecture decisions: [SPECS.md](SPECS.md).
 Standards, versions and maturity: [STANDARDS.md](STANDARDS.md).
@@ -241,6 +244,19 @@ curl -s http://localhost:3000/.well-known/openid-federation | cut -d. -f2 | base
 Errors follow OpenID Federation 1.0 §8.9, for example
 `404 {"error":"not_found","error_description":"Entity not found"}` for an
 unknown `sub`.
+
+## Integrating issuers and verifiers
+
+Each issuer or verifier keeps its own identity and needs: its own federation
+signing keys; its own signed Entity Configuration at
+`<entity_id>/.well-known/openid-federation`; `authority_hints` set to this
+Trust Anchor's Entity Identifier; its public federation keys registered here by
+the operator; protocol metadata (`openid_credential_issuer`,
+`openid_credential_verifier`, …) in its Entity Configuration; and wallets or
+relying parties configured with this Trust Anchor's identifier and public keys.
+
+The step-by-step guide, including how to verify that a subordinate and the
+Trust Anchor work together, is [docs/INTEGRATION.md](docs/INTEGRATION.md).
 
 ## Future enhancements
 
