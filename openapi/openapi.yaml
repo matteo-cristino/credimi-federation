@@ -1,0 +1,396 @@
+openapi: 3.1.0
+info:
+  title: credimi-federation
+  version: 0.1.0
+  summary: OpenID Federation 1.0 Trust Anchor (Credimi test federation)
+  description: |
+    Public, read-only HTTP interface of an OpenID Federation 1.0 Trust Anchor
+    operated by Credimi for development and interoperability testing. It is not
+    an officially recognized EUDI or IT-Wallet Trust Anchor.
+
+    Signed responses are compact JWS (`header.payload.signature`) with JOSE
+    header `typ` = `entity-statement+jwt`, `alg` = `ES256` and a `kid` naming
+    the Trust Anchor key. Their decoded header and claims are described by the
+    `EntityStatementHeader`, `EntityConfigurationClaims` and
+    `SubordinateStatementClaims` schemas. Verify every signature with the Trust
+    Anchor's public keys obtained over a trusted channel.
+
+    Federation errors follow OpenID Federation 1.0 §8.9. The HTML website
+    (`/`, `/inspect`, `/docs`) and static assets are not part of this API.
+
+    The `servers` list is generated at runtime: this deployment (same origin)
+    first, then the configured Entity Identifier.
+  license:
+    name: Apache-2.0
+    identifier: Apache-2.0
+externalDocs:
+  description: OpenID Federation 1.0 (final)
+  url: https://openid.net/specs/openid-federation-1_0-final.html
+servers:
+  - url: /
+    description: This deployment (same origin)
+tags:
+  - name: Federation
+    description: OpenID Federation 1.0 endpoints of the Trust Anchor
+  - name: Operations
+    description: Deployment and documentation endpoints
+paths:
+  /.well-known/openid-federation:
+    get:
+      tags: [Federation]
+      operationId: getEntityConfiguration
+      summary: Trust Anchor Entity Configuration
+      description: |
+        The Trust Anchor's self-signed Entity Configuration (OpenID Federation 1.0
+        §9). `iss` and `sub` are both the Trust Anchor's Entity Identifier;
+        `jwks` holds its public federation keys and `metadata.federation_entity`
+        advertises the fetch and list endpoints.
+      responses:
+        "200":
+          description: Signed Entity Configuration
+          headers:
+            Cache-Control:
+              $ref: "#/components/headers/NoStore"
+          content:
+            application/entity-statement+jwt:
+              schema:
+                $ref: "#/components/schemas/EntityStatementJwt"
+              examples:
+                compact:
+                  summary: Compact JWS (shortened)
+                  value: eyJhbGciOiJFUzI1NiIsInR5cCI6ImVudGl0eS1zdGF0ZW1lbnQrand0Iiwia2lkIjoiLi4uIn0.eyJpc3MiOiJodHRwczovL2ZlZGVyYXRpb24uY3JlZGltaS5pbyJ9.c2lnbmF0dXJl
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+  /federation_fetch:
+    get:
+      tags: [Federation]
+      operationId: fetchSubordinateStatement
+      summary: Fetch a Subordinate Statement
+      description: |
+        Returns the Trust Anchor's signed statement about one enabled, registered
+        Immediate Subordinate (OpenID Federation 1.0 §8.1). `jwks` contains the
+        subordinate's pinned public federation keys; `metadata_policy` and
+        `constraints` appear only when configured for that subordinate.
+      parameters:
+        - name: sub
+          in: query
+          required: true
+          description: Entity Identifier of the subordinate
+          schema:
+            type: string
+            format: uri
+          example: https://issuer.example.org
+      responses:
+        "200":
+          description: Signed Subordinate Statement
+          headers:
+            Cache-Control:
+              $ref: "#/components/headers/NoStore"
+          content:
+            application/entity-statement+jwt:
+              schema:
+                $ref: "#/components/schemas/EntityStatementJwt"
+        "400":
+          description: |
+            `invalid_request`: `sub` is missing or malformed, or names the Trust
+            Anchor itself.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FederationError"
+              example:
+                error: invalid_request
+                error_description: Missing or invalid 'sub' parameter
+        "404":
+          description: "`not_found`: `sub` is not an enabled subordinate."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FederationError"
+              example:
+                error: not_found
+                error_description: Entity not found
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+  /federation_list:
+    get:
+      tags: [Federation]
+      operationId: listSubordinates
+      summary: List Immediate Subordinates
+      description: |
+        Entity Identifiers of the enabled Immediate Subordinates (OpenID
+        Federation 1.0 §8.2). Repeated `entity_type` values match subordinates
+        having any of the given types. Trust Mark filters are not supported.
+      parameters:
+        - name: entity_type
+          in: query
+          required: false
+          description: Only subordinates registered with this Entity Type Identifier
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+          example: [openid_credential_issuer]
+        - name: intermediate
+          in: query
+          required: false
+          description: Only Intermediate Entities (`true`) or only non-intermediates (`false`)
+          schema:
+            type: boolean
+        - name: trust_marked
+          in: query
+          required: false
+          description: Not supported; answered with `unsupported_parameter`.
+          schema:
+            type: boolean
+        - name: trust_mark_type
+          in: query
+          required: false
+          description: Not supported; answered with `unsupported_parameter`.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: JSON array of Entity Identifiers
+          headers:
+            Cache-Control:
+              $ref: "#/components/headers/NoStore"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  format: uri
+              example:
+                - https://issuer.example.org
+        "400":
+          description: |
+            `unsupported_parameter` for Trust Mark filters; `invalid_request` for a
+            malformed boolean or an Entity Type the server does not recognize.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FederationError"
+              example:
+                error: unsupported_parameter
+                error_description: Trust mark filtering not supported
+        "405":
+          $ref: "#/components/responses/MethodNotAllowed"
+  /healthz:
+    get:
+      tags: [Operations]
+      operationId: getHealth
+      summary: Health check
+      description: Returns 200 once the signing key and subordinate registry are loaded.
+      responses:
+        "200":
+          description: Service is up
+          headers:
+            Cache-Control:
+              $ref: "#/components/headers/NoStore"
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                additionalProperties: false
+                properties:
+                  status:
+                    const: ok
+  /openapi.yaml:
+    get:
+      tags: [Operations]
+      operationId: getOpenApiYaml
+      summary: This OpenAPI document (YAML)
+      responses:
+        "200":
+          description: OpenAPI 3.1 document
+          content:
+            application/yaml:
+              schema:
+                type: string
+  /openapi.json:
+    get:
+      tags: [Operations]
+      operationId: getOpenApiJson
+      summary: This OpenAPI document (JSON, derived from the YAML)
+      responses:
+        "200":
+          description: OpenAPI 3.1 document
+          content:
+            application/json:
+              schema:
+                type: object
+components:
+  headers:
+    NoStore:
+      description: Responses are generated per request and must not be cached.
+      schema:
+        type: string
+        const: no-store
+  responses:
+    MethodNotAllowed:
+      description: Only GET (and HEAD) are supported.
+      headers:
+        Allow:
+          schema:
+            type: string
+            const: GET, HEAD
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/FederationError"
+          example:
+            error: invalid_request
+            error_description: /federation_fetch only supports the GET method.
+  schemas:
+    EntityStatementJwt:
+      title: Entity Statement JWT
+      description: |
+        Compact JWS. Decode the first segment for `EntityStatementHeader` and
+        the second for `EntityConfigurationClaims` or `SubordinateStatementClaims`.
+      type: string
+      pattern: ^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$
+    EntityStatementHeader:
+      title: Entity Statement JOSE header
+      type: object
+      required: [alg, typ, kid]
+      properties:
+        alg:
+          const: ES256
+        typ:
+          const: entity-statement+jwt
+        kid:
+          type: string
+          description: RFC 7638 SHA-256 thumbprint of the Trust Anchor signing key
+    EntityConfigurationClaims:
+      title: Trust Anchor Entity Configuration claims
+      type: object
+      required: [iss, sub, iat, exp, jwks, metadata]
+      properties:
+        iss:
+          type: string
+          format: uri
+          description: Trust Anchor Entity Identifier
+        sub:
+          type: string
+          format: uri
+          description: Same as `iss`
+        iat:
+          type: integer
+          description: Seconds since the epoch
+        exp:
+          type: integer
+          description: Seconds since the epoch
+        jwks:
+          $ref: "#/components/schemas/PublicJwkSet"
+        metadata:
+          type: object
+          required: [federation_entity]
+          properties:
+            federation_entity:
+              type: object
+              required: [federation_fetch_endpoint, federation_list_endpoint]
+              properties:
+                federation_fetch_endpoint:
+                  type: string
+                  format: uri
+                federation_list_endpoint:
+                  type: string
+                  format: uri
+    SubordinateStatementClaims:
+      title: Subordinate Statement claims
+      type: object
+      required: [iss, sub, iat, exp, jwks]
+      properties:
+        iss:
+          type: string
+          format: uri
+          description: Trust Anchor Entity Identifier
+        sub:
+          type: string
+          format: uri
+          description: Subordinate Entity Identifier
+        iat:
+          type: integer
+        exp:
+          type: integer
+        jwks:
+          $ref: "#/components/schemas/PublicJwkSet"
+        metadata_policy:
+          type: object
+          description: Present only when configured (OpenID Federation 1.0 §6.1)
+          additionalProperties:
+            type: object
+        constraints:
+          type: object
+          description: Present only when configured (OpenID Federation 1.0 §6.2)
+          properties:
+            max_path_length:
+              type: integer
+              minimum: 0
+            naming_constraints:
+              type: object
+              properties:
+                permitted:
+                  type: array
+                  items:
+                    type: string
+                excluded:
+                  type: array
+                  items:
+                    type: string
+            allowed_entity_types:
+              type: array
+              items:
+                type: string
+    PublicJwkSet:
+      type: object
+      required: [keys]
+      properties:
+        keys:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/PublicJwk"
+    PublicJwk:
+      description: Public JWK. Private members (`d`, `p`, `q`, …) never appear.
+      type: object
+      required: [kty, kid]
+      properties:
+        kty:
+          enum: [EC, RSA]
+        kid:
+          type: string
+        use:
+          const: sig
+        alg:
+          type: string
+        crv:
+          type: string
+        x:
+          type: string
+        y:
+          type: string
+        n:
+          type: string
+        e:
+          type: string
+      not:
+        anyOf:
+          - required: [d]
+          - required: [p]
+          - required: [q]
+    FederationError:
+      title: Federation error (OpenID Federation 1.0 §8.9)
+      type: object
+      required: [error, error_description]
+      properties:
+        error:
+          type: string
+          enum: [invalid_request, not_found, unsupported_parameter, server_error]
+        error_description:
+          type: string

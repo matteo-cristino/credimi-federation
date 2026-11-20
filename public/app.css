@@ -1,0 +1,229 @@
+/*
+  credimi-federation application styles. Loaded after /assets/brand/style.css.
+  Only layout and behaviour the brand stylesheet does not provide live here;
+  every colour, radius, size and family comes from a brand token.
+*/
+
+/* --- Accessibility --- */
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* --- Credimi Extras strips (DESIGN.md §13) --- */
+.credimi-extras-bar {
+  background: var(--brand-secondary);
+  color: var(--brand-primary);
+  padding: var(--space-2) var(--space-6);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-sm);
+}
+
+.credimi-extras-bar-footer {
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--fg-on-primary);
+  padding: var(--space-2) var(--space-6);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-sm);
+}
+
+.credimi-extras-bar-footer .credimi-extras-bar-inner {
+  opacity: 0.85;
+}
+
+.credimi-extras-bar-inner {
+  max-width: var(--max-width);
+  margin-inline: auto;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.credimi-extras-bar a,
+.credimi-extras-bar-footer a {
+  color: inherit;
+}
+
+.credimi-extras-mark {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-right: var(--space-1);
+  vertical-align: -3px;
+}
+
+.credimi-extras-wordmark {
+  display: inline-block;
+  height: 16px;
+  width: auto;
+  vertical-align: -3px;
+}
+
+/* --- Footer --- */
+.footer-brand {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.footer-mark {
+  flex: 0 0 auto;
+}
+
+/* --- Topbar on narrow screens: the brand rule lets it wrap, so let it grow --- */
+@media (max-width: 480px) {
+  .topbar {
+    height: auto;
+    min-height: var(--topbar-height);
+  }
+}
+
+/* --- Page content --- */
+.page-section {
+  margin-bottom: var(--space-10);
+}
+
+.page-title {
+  margin-bottom: var(--space-2);
+}
+
+.entity-id {
+  margin-bottom: var(--space-4);
+}
+
+.entity-id .inline-code {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font-size: var(--fs-base);
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+  margin-bottom: var(--space-6);
+}
+
+/* The brand .hero p colour (--fg-muted on lavender) is below WCAG AA for body copy. */
+.hero .hero-lead {
+  color: var(--fg-subtle);
+}
+
+.section-note {
+  margin-bottom: var(--space-6);
+  margin-top: var(--space-3);
+  font-size: var(--fs-sm);
+  color: var(--fg-subtle);
+  max-width: 72ch;
+}
+
+.breadcrumb {
+  font-size: var(--fs-sm);
+  color: var(--fg-subtle);
+  margin-bottom: var(--space-6);
+}
+
+.test-table code,
+.dl code {
+  overflow-wrap: anywhere;
+}
+
+.kid,
+.entity-ref,
+.endpoint-url {
+  font-size: var(--fs-xs);
+  word-break: break-all;
+}
+
+.entity-type {
+  display: inline-block;
+  margin: 0 var(--space-1) var(--space-1) 0;
+}
+
+.empty-state {
+  text-align: center;
+  padding: var(--space-10) var(--space-6);
+}
+
+.empty-state p + p {
+  margin-top: var(--space-2);
+  color: var(--fg-subtle);
+}
+
+pre.jwt code {
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* --- Info alert (DESIGN.md §11) --- */
+.alert {
+  display: flex;
+  gap: var(--space-3);
+  border: 1px solid currentColor;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.6);
+  padding: var(--space-4);
+  margin-bottom: var(--space-8);
+  font-size: var(--fs-base);
+}
+
+.alert-info {
+  color: var(--info);
+}
+
+.alert-icon {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+}
+
+.alert-title {
+  font-size: var(--fs-md);
+  font-weight: 500;
+  margin-bottom: var(--space-1);
+}
+
+/* --- API docs (Stoplight Elements) --- */
+.api-docs {
+  background: var(--bg);
+}
+
+.api-docs elements-api {
+  display: block;
+  height: calc(100vh - var(--topbar-height));
+}
+
+/* --- Data tables become labelled rows on narrow screens --- */
+@media (max-width: 768px) {
+  .stack-table thead {
+    display: none;
+  }
+
+  .stack-table tr {
+    display: block;
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .stack-table td {
+    display: block;
+    border-bottom: none;
+    padding: var(--space-1) var(--space-2);
+  }
+
+  .stack-table td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    color: var(--fg-subtle);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .stack-table .inline-code {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}

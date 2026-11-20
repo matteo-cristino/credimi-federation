@@ -1,0 +1,21 @@
+# Never send secrets or local key material to the build context.
+.env
+.env.*
+*.jwk
+data/
+
+# Local state and build output
+.git/
+node_modules/
+dist/
+coverage/
+handoffs/
+
+# Not needed in the image
+tests/
+brand/
+HITL/
+directives/
+docs/
+config/
+*.md

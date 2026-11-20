@@ -94,3 +94,9 @@ If unsure:
 - location: `HITL/01-harmonize-credimi-extras.md` § Required navigation; `DESIGN.md`
 - evidence: `credimi-capture-wallet` and this repository both expose `/docs` and a raw OpenAPI document and link them from the topbar; `DESIGN.md` defines no navigation set.
 - rationale: If the navigation set is meant to apply to every Credimi Extra with an API, it belongs in `DESIGN.md` or `BARIO.md`.
+
+- id: hitl-0008
+- observation: Several shared brand components set small text in `--fg-muted` (#9A97B5), `--warning` (#E9B93B) or `--success` (#058A57) on light fills, below the WCAG AA 4.5:1 contrast ratio for normal text.
+- location: `brand/style.css` `.hero p`, `.dl dt`, `.test-table th`, `.badge-neutral`, `.badge-issuer`, `.status-issuer`, `.status-verifier`
+- evidence: Computed WCAG ratios: #9A97B5 on #EEEAFE (lavender wash) 2.39:1, on #FFFFFF 2.81:1; #E9B93B on #FDF3D5 1.65:1; #058A57 on #E5F4EC 3.87:1. This repository overrides only its hero lead paragraph to `--fg-subtle` (5.10:1) in `public/app.css`; `HITL/01-harmonize-credimi-extras.md` requires WCAG AA.
+- rationale: Fixing contrast in each application redefines shared components; changing the tokens or rules is a brand decision that needs Design sign-off.

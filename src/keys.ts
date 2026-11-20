@@ -118,9 +118,21 @@ export async function loadFederationKey(path: string): Promise<FederationKey> {
     );
   }
 
+  let text: string;
+  try {
+    text = await readFile(path, "utf8");
+  } catch (error) {
+    if (isErrnoException(error) && error.code === "EACCES") {
+      throw new KeyError(
+        `Federation signing key at ${path} cannot be read by the service user (uid ${String(process.getuid?.() ?? "unknown")}). ` +
+          "Give that user ownership of the file and keep mode 600.",
+      );
+    }
+    throw error;
+  }
   let parsed: unknown;
   try {
-    parsed = JSON.parse(await readFile(path, "utf8"));
+    parsed = JSON.parse(text);
   } catch {
     throw new KeyError(`Federation signing key at ${path} is not valid JSON.`);
   }
