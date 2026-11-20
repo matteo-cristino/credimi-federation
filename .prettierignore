@@ -1,0 +1,19 @@
+# Generated or dependency output
+dist/
+coverage/
+node_modules/
+pnpm-lock.yaml
+
+# Local operational records (never committed)
+handoffs/
+
+# Human-authored governance and brand inputs: formatted by their authors,
+# not by the repository formatter.
+AGENTS.md
+CONTRIBUTING.md
+DESIGN.md
+HITL/
+directives/
+docs/CREATE_PROJECT.md
+brand/
+public/brand/

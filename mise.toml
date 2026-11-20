@@ -1,0 +1,4 @@
+[tools]
+node = "latest"
+pnpm = "12.21.0"
+task = "latest"

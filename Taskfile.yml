@@ -1,0 +1,68 @@
+version: "3"
+
+tasks:
+  install:
+    desc: Install pinned dependencies from the lockfile
+    cmds:
+      - pnpm install --frozen-lockfile
+
+  format:
+    desc: Format the repository with Prettier
+    cmds:
+      - pnpm format
+
+  format:check:
+    desc: Fail if any file is not formatted
+    cmds:
+      - pnpm format:check
+
+  lint:
+    desc: ESLint, stylelint, type check, Prettier check and the design lint
+    cmds:
+      - pnpm lint
+      - task lint:design
+
+  lint:design:
+    cmds:
+      - npx --yes @google/design.md lint DESIGN.md
+
+  test:
+    desc: Run the automated test suite
+    cmds:
+      - pnpm test
+
+  build:
+    desc: Compile TypeScript to dist/
+    cmds:
+      - pnpm build
+
+  run:
+    desc: Build and start the Trust Anchor with the variables in .env
+    deps: [build]
+    cmds:
+      - node --env-file-if-exists=.env dist/server.js
+
+  init:
+    desc: Generate the federation signing key (refuses to overwrite)
+    deps: [build]
+    cmds:
+      - node --env-file-if-exists=.env dist/cli.js init
+
+  check:
+    desc: Validate the signing key and subordinate configuration without starting
+    deps: [build]
+    cmds:
+      - node --env-file-if-exists=.env dist/cli.js check
+
+  ci:
+    desc: Everything CI runs — formatting, lint, tests and build
+    cmds:
+      - task: format:check
+      - task: lint
+      - task: test
+      - task: build
+
+  docker:build:
+    desc: Build the production image
+    cmds:
+      - docker build -t credimi-federation:local .

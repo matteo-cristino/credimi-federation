@@ -1,47 +1,44 @@
-# Credimi Extras mini-app Template
+# credimi-federation
+
+An OpenID Federation 1.0 Trust Anchor for Credimi development and
+interoperability testing.
 
 **Credimi** is the trustworthy compliance checker for decentralized identity
 solutions, built and operated by Forkbomb BV (Amsterdam) under the NGI
-TRUSTCHAIN programme. A Credimi Extra is a mini-app in that family.
+TRUSTCHAIN programme. This repository is a Credimi Extra.
 
-This GitHub template starts a new Credimi Extras mini-app with its governance,
-standards-neutral documentation, and authoritative Credimi design assets.
+Issuers, verifiers and wallet providers that want to prove federation
+membership need a Trust Anchor that publishes signed statements about them.
+This service is that Trust Anchor for a small, self-hosted federation, starting
+with the issuers and verifier of
+[credimi-capture-wallet](https://github.com/ForkbombEu/credimi-capture-wallet).
+It is a **test federation operated by Credimi**. It is not an officially
+recognized EUDI or IT-Wallet Trust Anchor.
 
-It deliberately contains no application implementation. A derived project may
-use exactly one backend stack: Go or Node.js with TypeScript. Stack selection
-happens in the derived project, based on its actual requirements; this template
-does not select, scaffold, or implement either stack.
+> Status: in development. Project specifications and tooling are in place; the
+> service is implemented in subsequent commits.
 
-Complete [SPECS.md](SPECS.md) before implementation. It records the selected
-backend, architecture, dependencies, commands, and runtime asset locations.
-Populate [STANDARDS.md](STANDARDS.md) only with standards, versions, and
-profiles confirmed to apply to the derived project.
+## Technical specs
 
-The authoritative design assets are in [brand/](brand/) — one place, no second
-token file to reconcile against:
+- Node.js with TypeScript (strict), Fastify, pnpm.
+- [`@oidfed/authority`](https://github.com/Dahkenangnon/oidfed) and
+  `@oidfed/core` for OpenID Federation 1.0 statement issuance.
+- `jose` for key generation and key handling.
 
+Runtime versions, dependencies and architecture are recorded in
+[SPECS.md](SPECS.md); applicable standards in [STANDARDS.md](STANDARDS.md).
+
+## How to run
+
+```sh
+mise install        # Node.js, pnpm and Task
+task install        # pnpm install --frozen-lockfile
+task lint           # ESLint, stylelint, tsc, Prettier check, design lint
+task test
 ```
-brand/style.css                        the brand stylesheet — load this first
-brand/fonts/InterVariable.ttf          brand sans      (SIL OFL 1.1)
-brand/fonts/SourceCodeProVariable.ttf  brand monospace (SIL OFL 1.1)
-brand/logos/credimi_logo.svg           mark, dark — also the favicon
-brand/logos/credimi_logo_negative.svg  mark, negative
-brand/logos/credimi_logo-transp.svg    wordmark, dark
-brand/logos/credimi_logo-transp_white.svg  wordmark, white
-```
 
-The four logos are frozen and SHA-256 pinned in [DESIGN.md](DESIGN.md) §1.
-`brand/style.css` is maintained, not frozen — it is where the brand lives.
+## Governance
 
-[HITL/](HITL/) now holds only human briefs.
-
-Follow [docs/CREATE_PROJECT.md](docs/CREATE_PROJECT.md) when creating a
-project from this template. Design and branding rules are in
-[DESIGN.md](DESIGN.md); governance instructions are in [AGENTS.md](AGENTS.md)
-and [directives/](directives/).
-
-The canonical brand specification is the Credimi Design System project at
-<https://claude.ai/design/p/019e1703-03a5-73c9-9db0-028f11767c3f>.
-[DESIGN.md](DESIGN.md) is that specification adapted to this template, and
-`brand/style.css` merges the design system's tokens with the former
-`HITL/style.css` — see [DESIGN.md](DESIGN.md) §16 for what that merge changed.
+Read [AGENTS.md](AGENTS.md) and [directives/](directives/) before
+contributing. Design rules are in [DESIGN.md](DESIGN.md); the canonical brand
+assets are in [brand/](brand/).

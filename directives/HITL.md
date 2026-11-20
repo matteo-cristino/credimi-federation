@@ -76,3 +76,21 @@ If unsure:
 - location: Credimi Design System project, `assets/404-computer.svg` and `assets/maintenance.svg`
 - evidence: Each file is a `<rect>` filled by a pattern referencing an `<image>` element that carries no data. Nothing renders. `DESIGN.md` §9 and §12 require an illustration in every empty and error state.
 - rationale: The requirement cannot be met until working files exist upstream.
+
+- id: hitl-0005
+- observation: The `Taskfile.yml` block in `BARIO.md` prescribes Go commands (`go test`, `go run`, `go build`) without a Go-only condition, while Node.js/TypeScript Credimi Extras exist.
+- location: `directives/BARIO.md` § Taskfile; `Taskfile.yml`
+- evidence: This repository and `credimi-capture-wallet` are Node.js/TypeScript; both keep the `test`, `lint`, `lint:design`, `run`, `build` task names but run pnpm equivalents.
+- rationale: The rule should state whether the Go commands apply only to Go projects, or what Node.js projects must run instead.
+
+- id: hitl-0006
+- observation: `BARIO.md` requires `node = "latest"` in `mise.toml` when `DESIGN.md` is present, which leaves the Node.js runtime of Node.js projects unpinned in development.
+- location: `directives/BARIO.md` § Design Source; `mise.toml`; `Dockerfile`
+- evidence: This repository and `credimi-capture-wallet` both declare `node = "latest"`; here the production image pins `node:26.13.1-alpine`, so development and production can drift when a new Node.js major is released.
+- rationale: The rule was written for running the design lint; a human should decide whether Node.js projects may pin their runtime in `mise.toml`.
+
+- id: hitl-0007
+- observation: The required top navigation for API applications (Home, API docs, OpenAPI, Repository) is defined only in a brief scoped to four other repositories.
+- location: `HITL/01-harmonize-credimi-extras.md` § Required navigation; `DESIGN.md`
+- evidence: `credimi-capture-wallet` and this repository both expose `/docs` and a raw OpenAPI document and link them from the topbar; `DESIGN.md` defines no navigation set.
+- rationale: If the navigation set is meant to apply to every Credimi Extra with an API, it belongs in `DESIGN.md` or `BARIO.md`.
